@@ -130,9 +130,8 @@ const confirmPayment = async (req, res) => {
             if (!isValid) {
                 return res.status(400).json({ success: false, message: "Invalid signature" });
             }
-            await processSuccessfulOrder(reference, tracker);
         }
-        
+        await processSuccessfulOrder(reference, tracker);
         const updatedOrder = await Order.findById(reference).populate('user', 'name email').populate('products.product', 'name price');
         res.json({ success: true, message: "Payment confirmed", order: updatedOrder });
     } catch (error) {

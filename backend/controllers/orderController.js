@@ -22,32 +22,7 @@ const createOrder = async (req, res) => {
                 paymentID: paymentId
             });
             
-            const message = `
-            <!DOCTYPE html><html><head>
-            <style>
-                .container { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px; }
-                .header { background-color: #f97316; color: white; padding: 10px; text-align: center; border-radius: 5px 5px 0 0; }
-                .content { padding: 20px; }
-                .footer { text-align: center; font-size: 12px; color: #777; margin-top: 20px; }
-            </style></head><body>
-            <div class="container">
-                <div class="header">
-                    <h1>Order Confirmed!</h1>
-                </div>
-                <div class="content">
-                    <h2>Hello there!</h2>
-                    <p>Thank you for shopping with <strong>VemiroNest</strong>. We are excited to let you know that we have received your order and it is now being processed.</p>
-                    <p>You will receive another email once your order has been shipped. If you have any questions, feel free to reach out to our support team.</p>
-                    <p>Happy Shopping!</p>
-                </div>
-                <div class="footer">
-                    <p>&copy; 2026 VemiroNest. All rights reserved.</p>
-                </div>
-            </div></body></html>
-            `;
-            
             await order.save();
-            sendEmail(req.user.email, 'Order Created', message).catch(err => console.error(err));
             res.status(201).json({ message: 'Order created successfully', order });
         }
     } catch(error) {

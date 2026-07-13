@@ -1,1 +1,31 @@
-const mongoose = require("mongoose");const pendingUserSchema = mongoose.Schema({    name: {        type: String,        required: true    },    email: {        type: String,        required: true,        unique: true    },    password: {        type: String,        required: true    },    otp: {        type: String,        required: true    },    otpExpire: {        type: Date,        required: true    },    createdAt: {        type: Date,        default: Date.now,        expires: 600 // Auto-delete document after 10 minutes    }});const PendingUser = mongoose.model("PendingUser", pendingUserSchema);module.exports = PendingUser;
+const mongoose = require("mongoose");
+const pendingUserSchema = mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    otp: {
+        type: String,
+        required: true
+    },
+    otpExpire: {
+        type: Date,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: 600
+    }
+});
+const PendingUser = mongoose.model("PendingUser", pendingUserSchema);
+module.exports = PendingUser;

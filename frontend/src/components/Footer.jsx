@@ -15,6 +15,7 @@ const Footer = () => {
           <Link to="/about">About Us</Link>
           <Link to="/return">Return Policy</Link>
           <Link to="/disclaimer">Disclaimer</Link>
+          <Link to="/contact">Contact Us</Link>
         </div>
         
         <div className="footer-copyright">

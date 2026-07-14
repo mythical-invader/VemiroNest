@@ -3,7 +3,7 @@ const sendEmail = require('../utils/sendEmail');
 
 const createOrder = async (req, res) => {
     try {
-        const { items, totalAmount, address, paymentId } = req.body;
+        const { items, totalAmount, address, paymentId, guestEmail, paymentMethod } = req.body;
         
         if (!items || items.length === 0 || !totalAmount || !address) {
             return res.status(400).json({ message: 'Invalid order data' });
@@ -15,7 +15,9 @@ const createOrder = async (req, res) => {
             }));
             
             const order = new Order({
-                user: req.user._id,
+                user: req.user ? req.user._id : undefined,
+                guestEmail: req.user ? undefined : guestEmail,
+                paymentMethod: paymentMethod || 'safepay',
                 products,
                 totalAmount,
                 address,

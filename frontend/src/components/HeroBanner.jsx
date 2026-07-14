@@ -1,218 +1,333 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingBag, Star, Zap, Gift, Heart, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { ShoppingBag, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import confetti from 'canvas-confetti';
 
-const HeroBanner = () => {
-  const navigate = useNavigate();
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+const AntigravityCanvas = () => {
+  const canvasRef = useRef(null);
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let animationFrameId;
+    let width = 0;
+    let height = 0;
+    const mouse = { x: 0, y: 0, isHovered: false };
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.isHovered = true;
+    };
+    const handleMouseLeave = () => {
+      mouse.isHovered = false;
+    };
+    canvas.addEventListener("mousemove", handleMouseMove);
+    canvas.addEventListener("mouseleave", handleMouseLeave);
+    const resizeCanvas = () => {
+      const parent = canvas.parentElement;
+      if (parent) {
+        width = canvas.width = parent.offsetWidth;
+        height = canvas.height = parent.offsetHeight;
+      }
+    };
+    resizeCanvas();
+    const observer = new ResizeObserver(() => resizeCanvas());
+    if (canvas.parentElement) {
+      observer.observe(canvas.parentElement);
+    }
+    const particleCount = 60;
+    const particles = [];
+    const colors = ["#ff9900", "#ffc872", "#ffffff", "#ffecd2"];
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * 2000,
+        y: Math.random() * 2000,
+        radius: Math.random() * 2 + 0.5,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -(Math.random() * 0.7 + 0.2),
+        alpha: Math.random() * 0.6 + 0.1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      });
+    }
+    const render = () => {
+      if (width === 0 || height === 0) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (mouse.isHovered) {
+          const dx = mouse.x - p.x;
+          const dy = mouse.y - p.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            p.x += (dx / dist) * 0.2;
+            p.y += (dy / dist) * 0.2;
+          }
+        }
+        if (p.y < 0) {
+          p.y = height + 10;
+          p.x = Math.random() * width;
+        }
+        if (p.x < 0) p.x = width;
+        if (p.x > width) p.x = 0;
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
+        ctx.fill();
+        ctx.restore();
+      });
+      animationFrameId = requestAnimationFrame(render);
+    };
+    render();
+    return () => {
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      canvas.removeEventListener("mouseleave", handleMouseLeave);
+      observer.disconnect();
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
-
-  const handleMouseMove = (e) => {
-    const x = (e.clientX - window.innerWidth / 2) * 0.05;
-    const y = (e.clientY - window.innerHeight / 2) * 0.05;
-    setMousePos({ x, y });
-  };
-
-  const triggerConfetti = () => {
-    confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 },
-      colors: ['#f97316', '#10b981', '#3b82f6', '#eab308', '#8b5cf6', '#ec4899']
-    });
-  };
-
-  // 3. Staggered Bouncing Text Animation
-  const titleText = "Level Up Your Lifestyle.";
-  const container = {
-    hidden: { opacity: 0 },
-    visible: (i = 1) => ({
-      opacity: 1,
-      transition: { staggerChildren: 0.05, delayChildren: 0.04 * i },
-    }),
-  };
-
-  const child = {
-    visible: {
-      opacity: 1,
-      y: 0,
-      rotate: 0,
-      scale: 1,
-      transition: { type: "spring", damping: 10, stiffness: 200 },
-    },
-    hidden: {
-      opacity: 0,
-      y: 50,
-      rotate: -10,
-      scale: 0.5,
-      transition: { type: "spring", damping: 10, stiffness: 200 },
-    },
-  };
-
   return (
-    <div 
-      onMouseMove={handleMouseMove}
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        pointerEvents: 'none',
+        zIndex: 0
+      }}
+    />
+  );
+};
+
+const PrimaryButton = ({ onClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  return (
+    <motion.button
+      onClick={onClick}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      whileHover={{ scale: 1.05, y: -2 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
       style={{
         position: 'relative',
-        background: 'linear-gradient(135deg, #09090b 0%, #18181b 100%)',
-        borderRadius: '24px',
-        padding: isMobile ? '40px 20px' : '80px 40px',
-        overflow: 'hidden',
-        marginBottom: '60px',
-        border: '1px solid rgba(249, 115, 22, 0.15)',
-        boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 0 80px rgba(249,115,22,0.03)',
-        textAlign: 'center',
+        background: 'linear-gradient(90deg, #f97316, #ea580c)',
+        color: 'white',
+        border: 'none',
+        padding: '18px 40px',
+        borderRadius: '50px',
+        fontSize: '1.05rem',
+        fontWeight: 600,
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: isMobile ? 'calc(100vh - 220px)' : 'calc(100vh - 200px)'
+        gap: '12px',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        boxShadow: isHovered ? '0 15px 35px rgba(249,115,22,0.4)' : '0 10px 20px rgba(249,115,22,0.2)',
+        letterSpacing: '0.025em'
       }}
     >
-      
-      {/* Dynamic Glowing Orb that follows cursor slightly */}
       <motion.div 
-        animate={{ x: mousePos.x * 2, y: mousePos.y * 2 }}
-        transition={{ type: "spring", stiffness: 50, damping: 20 }}
+        animate={{ left: isHovered ? '200%' : '-100%' }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        style={{ position: 'absolute', top: 0, left: '-100%', width: '40%', height: '100%', background: 'rgba(255,255,255,0.2)', transform: 'skewX(-25deg)', zIndex: 0 }}
+      />
+      <span style={{ position: 'relative', zIndex: 1 }}>Explore Collection</span>
+      <motion.div animate={{ x: isHovered ? 4 : 0 }} style={{ position: 'relative', zIndex: 1, display: 'flex' }}>
+        <ShoppingBag size={20} />
+      </motion.div>
+    </motion.button>
+  );
+};
+
+const HeroBanner = () => {  
+  const navigate = useNavigate();  
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);  
+  const containerRef = useRef(null);    
+  const mouseX = useMotionValue(-1000); 
+  const mouseY = useMotionValue(-1000);  
+  const springX = useSpring(mouseX, { stiffness: 100, damping: 30 });  
+  const springY = useSpring(mouseY, { stiffness: 100, damping: 30 });  
+  
+  useEffect(() => {    
+    const handleResize = () => setIsMobile(window.innerWidth < 768);    
+    window.addEventListener('resize', handleResize);    
+    return () => window.removeEventListener('resize', handleResize);  
+  }, []);  
+  
+  const handleMouseMove = (e) => {    
+    if (!containerRef.current || isMobile) return;    
+    const rect = containerRef.current.getBoundingClientRect();    
+    mouseX.set(e.clientX - rect.left);    
+    mouseY.set(e.clientY - rect.top);  
+  };  
+  
+  const handleMouseLeave = () => {    
+    mouseX.set(-1000);    
+    mouseY.set(-1000);  
+  };  
+  
+  const spotlightBackground = useTransform(    
+    [springX, springY],    
+    ([x, y]) => `radial-gradient(800px circle at ${x}px ${y}px, rgba(249, 115, 22, 0.08), transparent 70%)`  
+  );  
+
+  return (    
+    <section 
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        position: 'relative',
+        width: '100%',
+        minHeight: '70vh',
+        backgroundColor: '#050505',
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: 'stretch',
+        overflow: 'hidden',
+        marginBottom: '60px',
+        borderRadius: '24px'
+      }}
+    >      
+
+      <motion.div 
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: isMobile ? '400px' : '800px',
-          height: isMobile ? '400px' : '800px',
-          background: 'radial-gradient(circle, rgba(249,115,22,0.1) 0%, rgba(0,0,0,0) 60%)',
+          inset: 0,
+          background: isMobile ? 'transparent' : spotlightBackground,
           pointerEvents: 'none',
-          zIndex: 0
+          zIndex: 5
+        }}
+      />      
+
+      <div 
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)',
+          backgroundSize: '40px 40px',
+          zIndex: 0,
+          pointerEvents: 'none'
         }} 
-      />
+      />      
 
-      {/* Floating Parallax Icons */}
-      <motion.div 
-        animate={{ x: mousePos.x * -1.5, y: [mousePos.y * -1.5 - 15, mousePos.y * -1.5 + 15], rotate: [0, 10, 0] }}
-        transition={{ y: { duration: 2.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }, rotate: { duration: 4, repeat: Infinity } }}
-        style={{ position: 'absolute', top: '15%', left: '8%', color: '#f97316', opacity: 0.9 }}
+      <div 
+        style={{ 
+          flex: 1, 
+          padding: isMobile ? '60px 5% 40px' : '40px 8%', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          justifyContent: 'center', 
+          alignItems: isMobile ? 'center' : 'flex-start', 
+          textAlign: isMobile ? 'center' : 'left', 
+          zIndex: 10, 
+          position: 'relative', 
+          maxWidth: isMobile ? '100%' : '55%' 
+        }}
       >
-        <ShoppingBag size={56} strokeWidth={2} />
-      </motion.div>
-
-      <motion.div 
-        animate={{ x: mousePos.x * 2, y: [mousePos.y * 2 - 20, mousePos.y * 2 + 20], rotate: [0, -15, 0] }}
-        transition={{ y: { duration: 3, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 0.5 }, rotate: { duration: 5, repeat: Infinity } }}
-        style={{ position: 'absolute', bottom: '20%', right: '12%', color: '#10b981', opacity: 0.8 }}
-      >
-        <Gift size={64} strokeWidth={2} />
-      </motion.div>
-
-      <motion.div 
-        animate={{ x: mousePos.x * -2, y: [mousePos.y * -2 - 10, mousePos.y * -2 + 10], rotate: [0, 20, 0] }}
-        transition={{ y: { duration: 2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 1 }, rotate: { duration: 3.5, repeat: Infinity } }}
-        style={{ position: 'absolute', top: '25%', right: '10%', color: '#eab308', opacity: 0.9 }}
-      >
-        <Star size={48} strokeWidth={2} />
-      </motion.div>
-
-      <motion.div 
-        animate={{ x: mousePos.x * 1.5, y: [mousePos.y * 1.5 - 18, mousePos.y * 1.5 + 18], rotate: [0, -10, 0] }}
-        transition={{ y: { duration: 2.8, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 1.5 }, rotate: { duration: 4.5, repeat: Infinity } }}
-        style={{ position: 'absolute', bottom: '15%', left: '15%', color: '#8b5cf6', opacity: 0.8 }}
-      >
-        <Zap size={52} strokeWidth={2} />
-      </motion.div>
-
-      <motion.div 
-        animate={{ x: mousePos.x * -1, y: [mousePos.y * -1 - 12, mousePos.y * -1 + 12], scale: [1, 1.1, 1] }}
-        transition={{ y: { duration: 2.2, repeat: Infinity, repeatType: "reverse", ease: "easeInOut", delay: 0.2 }, scale: { duration: 2, repeat: Infinity } }}
-        style={{ position: 'absolute', top: '10%', left: '48%', color: '#ec4899', opacity: 0.7 }}
-      >
-        <Heart size={40} strokeWidth={2} />
-      </motion.div>
-
-      {/* Main Content */}
-      <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        
-        {/* Staggered Bouncing Title */}
         <motion.div
-          style={{ display: "flex", overflow: "hidden", justifyContent: "center", flexWrap: "wrap", marginBottom: '20px' }}
-          variants={container}
-          initial="hidden"
-          animate="visible"
-        >
-          {titleText.split(" ").map((word, wordIndex) => (
-            <span key={wordIndex} style={{ display: 'inline-block', marginRight: isMobile ? '12px' : '18px' }}>
-              {word.split("").map((letter, letterIndex) => (
-                <motion.span
-                  key={`${wordIndex}-${letterIndex}`}
-                  variants={child}
-                  style={{
-                    fontSize: isMobile ? '2.8rem' : '4.5rem', 
-                    fontWeight: 800,
-                    background: 'linear-gradient(to bottom right, #ffffff, #f97316)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    display: 'inline-block',
-                    textShadow: '0 4px 10px rgba(0,0,0,0.3)'
-                  }}
-                >
-                  {letter}
-                </motion.span>
-              ))}
-            </span>
-          ))}
-        </motion.div>
-
-        <motion.p 
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.5, type: "spring" }}
-          style={{ fontSize: isMobile ? '1.1rem' : '1.4rem', color: '#a1a1aa', maxWidth: '600px', margin: '0 auto 40px', lineHeight: '1.6' }}
-        >
-          Discover the internet's best products at unbeatable prices. Fun, fast, and delivered right to your nest.
-        </motion.p>
-
-        {/* Super Interactive Button */}
-        <motion.button
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, type: "spring", stiffness: 200 }}
-          whileHover={{ 
-            scale: 1.1, 
-            rotate: [-1, 1, -1, 0], 
-            boxShadow: "0px 0px 25px rgba(249, 115, 22, 0.8)" 
-          }}
-          whileTap={{ scale: 0.9 }}
-          onMouseEnter={triggerConfetti}
-          onClick={() => { 
-            triggerConfetti(); 
-            setTimeout(() => navigate('/shop'), 600); 
-          }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           style={{
-            background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-            color: '#fff',
-            border: 'none',
-            padding: '18px 40px',
-            borderRadius: '50px',
-            fontSize: '1.3rem',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 10px 25px rgba(249, 115, 22, 0.4)',
-            display: 'flex',
+            display: 'inline-flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '8px',
+            marginBottom: '12px'
           }}
         >
-          <Sparkles size={24} /> Start Exploring <Zap size={20} />
-        </motion.button>
+          <Sparkles style={{ width: '12px', height: '12px', color: '#f97316' }} />
+          <span style={{ 
+            fontSize: '0.7rem', 
+            fontWeight: 800, 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.25em', 
+            color: '#f97316' 
+          }}>
+            New Season Arrival
+          </span>
+        </motion.div>
+        <motion.h1
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            fontSize: isMobile ? '3rem' : '4.5rem',
+            fontWeight: 900,
+            letterSpacing: '-0.04em',
+            lineHeight: 1.05,
+            marginBottom: '16px',
+            color: '#ffffff',
+            textShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          }}
+        >
+          Curated<br />Elegance.
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.3, ease: "easeOut" }}
+          style={{
+            fontSize: isMobile ? '1rem' : '1.15rem',
+            color: '#a8a29e',
+            maxWidth: '520px',
+            fontWeight: 400,
+            lineHeight: 1.6,
+            marginBottom: '32px',
+            opacity: 0.8
+          }}
+        >
+          Discover our exclusive collection of premium products, thoughtfully selected to elevate your modern lifestyle. Where quality meets sophisticated design.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.45 }}
+          style={{ display: 'flex', gap: '24px', alignItems: 'center', justifyContent: isMobile ? 'center' : 'flex-start', flexWrap: 'wrap', width: '100%' }}
+        >
+          <PrimaryButton onClick={() => navigate('/shop')} />
+        </motion.div>
       </div>
-    </div>
+
+      <div 
+        style={{
+          flex: 1,
+          position: 'relative',
+          minHeight: isMobile ? '50vh' : 'auto',
+          width: '100%',
+          overflow: 'hidden',
+          display: isMobile ? 'none' : 'block'
+        }}
+      >        
+
+        <img 
+          src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80" 
+          alt="Premium Lifestyle Curation" 
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', opacity: 0.85, filter: 'contrast(1.05) brightness(0.95)', zIndex: 0 }} 
+        />                
+
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #050505 0%, transparent 40%, transparent 80%, #050505 100%)', zIndex: 2, pointerEvents: 'none' }} />        
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, #050505 0%, transparent 20%)', zIndex: 2, pointerEvents: 'none' }} />                
+
+        <div style={{ position: 'absolute', inset: 0, zIndex: 3, mixBlendMode: 'screen' }}>          
+          <AntigravityCanvas />        
+        </div>      
+      </div>    
+    </section>  
   );
 };
 

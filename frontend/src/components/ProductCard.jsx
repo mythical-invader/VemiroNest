@@ -17,7 +17,7 @@ const ProductCard = ({ product }) => {
         e.stopPropagation();
         setAnimate(true);
         setTimeout(() => setAnimate(false), 300);
-        await dispatch(toggleWishlistItem({ productId: product._id, token: user?.token }));
+        await dispatch(toggleWishlistItem({ product, token: user?.token }));
         dispatch(fetchWishlist(user?.token));
     };
 

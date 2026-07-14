@@ -15,6 +15,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import About from './pages/About';
 import Disclaimer from './pages/Disclaimer';
 import ReturnPolicy from './pages/ReturnPolicy';
+import Contact from './pages/Contact';
 import AdminDashboard from './admin/AdminDashboard';
 import AddProduct from './admin/AddProduct';
 import AdminProducts from './admin/AdminProducts';
@@ -42,6 +43,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="/return" element={<ReturnPolicy />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/add-product" element={<AddProduct />} />
           <Route path="/admin/products" element={<AdminProducts />} />

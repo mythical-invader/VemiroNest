@@ -8,7 +8,10 @@ export const fetchWishlist = createAsyncThunk('wishlist/fetchWishlist', async (a
             token = JSON.parse(userInfo).token;
         }
     }
-    if (!token) return [];
+    if (!token) {
+        const guestWishlist = JSON.parse(localStorage.getItem('guestWishlist')) || [];
+        return guestWishlist;
+    }
     const res = await fetch('/api/auth/wishlist', {
         headers: { Authorization: `Bearer ${token}` }
     });
@@ -16,7 +19,7 @@ export const fetchWishlist = createAsyncThunk('wishlist/fetchWishlist', async (a
     return data;
 });
 
-export const toggleWishlistItem = createAsyncThunk('wishlist/toggleItem', async ({ productId, token: argToken }, { getState }) => {
+export const toggleWishlistItem = createAsyncThunk('wishlist/toggleItem', async ({ product, token: argToken }, { getState }) => {
     let token = argToken || getState().cart.token;
     if (!token) {
         const userInfo = localStorage.getItem('userInfo');
@@ -24,7 +27,18 @@ export const toggleWishlistItem = createAsyncThunk('wishlist/toggleItem', async 
             token = JSON.parse(userInfo).token;
         }
     }
-    const res = await fetch(`/api/auth/wishlist/${productId}`, {
+    if (!token) {
+        let guestWishlist = JSON.parse(localStorage.getItem('guestWishlist')) || [];
+        const exists = guestWishlist.find(item => item._id === product._id);
+        if (exists) {
+            guestWishlist = guestWishlist.filter(item => item._id !== product._id);
+        } else {
+            guestWishlist.push(product);
+        }
+        localStorage.setItem('guestWishlist', JSON.stringify(guestWishlist));
+        return guestWishlist;
+    }
+    const res = await fetch(`/api/auth/wishlist/${product._id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
     });

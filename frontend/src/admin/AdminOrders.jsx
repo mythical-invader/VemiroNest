@@ -59,6 +59,7 @@ const AdminOrders = () => {
               <th>ORDER ID</th>
               <th>USER</th>
               <th>DELIVERY DETAILS</th>
+              <th>PRODUCTS</th>
               <th>TOTAL</th>
               <th>DATE</th>
               <th>STATUS</th>
@@ -68,16 +69,26 @@ const AdminOrders = () => {
             {filteredOrders.map(order => (
               <tr key={order._id}>
                 <td>{order._id.substring(0, 8)}...</td>
-                <td>{order.user?.name || 'Deleted User'}</td>
+                <td>{order.user?.name || (order.address?.fullName ? `${order.address.fullName} (Guest)` : 'Deleted User')}</td>
                 <td>
                   {order.address ? (
                     <div style={{ fontSize: '0.85rem', color: '#a1a1aa', lineHeight: '1.4' }}>
                       <strong style={{ color: '#fff' }}>{order.address.fullName}</strong><br/>
                       {order.address.street}<br/>
                       {order.address.city}, {order.address.postalCode}<br/>
-                      {order.address.country}
+                      {order.address.country}<br/>
+                      <span style={{ color: '#f97316', display: 'inline-block', marginTop: '4px' }}>📞 {order.address.phone || 'No Phone Number'}</span>
                     </div>
                   ) : 'N/A'}
+                </td>
+                <td>
+                  <ul style={{ listStyleType: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: '#d4d4d8' }}>
+                    {order.products?.map((item, i) => (
+                      <li key={i} style={{ marginBottom: '4px', borderBottom: i !== order.products.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', paddingBottom: '4px' }}>
+                        {item.qty}x {item.product?.name || 'Unknown Product'}
+                      </li>
+                    ))}
+                  </ul>
                 </td>
                 <td>Rs. {order.totalAmount.toFixed(2)}</td>
                 <td>{new Date(order.createdAt).toLocaleDateString()}</td>

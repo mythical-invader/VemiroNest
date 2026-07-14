@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { clearCart } from '../redux/cartSlice';
 import { Modal, Button } from 'react-bootstrap';
 import { motion } from 'framer-motion';
-import { Sparkles, Zap } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import '../styles/navbar.css';
 
 const Navbar = () => {
@@ -14,6 +14,7 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -31,35 +32,21 @@ const Navbar = () => {
       <nav className="navbar">
         <div className="navbar-container">
           <div className="navbar-brand-wrapper">
-            <motion.div 
-              className="mobile-fun-icon left-icon"
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            >
-              <Sparkles size={22} color="#f97316" />
-            </motion.div>
+            <div className="navbar-brand">              <Link                 to="/"                 style={{ fontSize: '32px', display: 'flex', alignItems: 'center' }}              >                <img                   src="/Logo2.png"                   alt="VemiroNest"                   style={{ height: '44px', width: '44px', borderRadius: '10px', objectFit: 'cover', filter: 'drop-shadow(0 2px 8px rgba(249, 115, 22, 0.35))', marginRight: '12px' }}                 />                VemiroNest              </Link>            </div>
 
-            <div className="navbar-brand">
-              <Link to="/">
-                <img src="/Logo2.png" alt="VemiroNest" style={{ height: '36px', width: '36px', borderRadius: '8px', objectFit: 'cover', filter: 'drop-shadow(0 2px 8px rgba(249, 115, 22, 0.35))', marginRight: '10px' }} />
-                VemiroNest
-              </Link>
+            <div 
+              className="mobile-menu-toggle right-icon" 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={26} color="#fff" /> : <Menu size={26} color="#fff" />}
             </div>
-
-            <motion.div 
-              className="mobile-fun-icon right-icon"
-              animate={{ scale: [1, 1.2, 1], rotate: [0, 5, -5, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-            >
-              <Zap size={22} color="#f97316" strokeWidth={2.5} opacity={0.9} />
-            </motion.div>
           </div>
-          <ul className="navbar-links">
+          <ul className={`navbar-links ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
             <li><Link to="/shop">Shop</Link></li>
             <li><Link to="/cart">Cart ({cartItems.length})</Link></li>
+            <li><Link to="/wishlist">Wishlist</Link></li>
             {user ? (
               <>
-                <li><Link to="/wishlist">Wishlist</Link></li>
                 <li><Link to="/profile">Hi, {user.name}</Link></li>
                 {user.role === 'admin' && <li><Link to="/admin">Admin</Link></li>}
                 {user.role !== 'admin' && <li><button onClick={handleLogoutClick} className="btn-logout" style={{ marginLeft: '15px' }}>Logout</button></li>}

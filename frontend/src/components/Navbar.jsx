@@ -1,31 +1,14 @@
 import React, { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { useSelector, useDispatch } from 'react-redux';
-import { clearCart } from '../redux/cartSlice';
-import { Modal, Button } from 'react-bootstrap';
-import { motion } from 'framer-motion';
+import { useSelector } from 'react-redux';
 import { Menu, X } from 'lucide-react';
 import '../styles/navbar.css';
 
 const Navbar = () => {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const cartItems = useSelector((state) => state.cart.cartItems);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const handleLogoutClick = () => {
-    setShowLogoutModal(true);
-  };
-
-  const handleConfirmLogout = () => {
-    logout();
-    dispatch(clearCart());
-    setShowLogoutModal(false);
-    navigate('/login');
-  };
 
   return (
     <>
@@ -49,7 +32,6 @@ const Navbar = () => {
               <>
                 <li><Link to="/profile">Hi, {user.name}</Link></li>
                 {user.role === 'admin' && <li><Link to="/admin">Admin</Link></li>}
-                {user.role !== 'admin' && <li><button onClick={handleLogoutClick} className="btn-logout" style={{ marginLeft: '15px' }}>Logout</button></li>}
               </>
             ) : (
               <li><Link to="/login">Login</Link></li>
@@ -57,23 +39,6 @@ const Navbar = () => {
           </ul>
         </div>
       </nav>
-      {}
-      <Modal show={showLogoutModal} onHide={() => setShowLogoutModal(false)} centered contentClassName="bg-dark text-white border-secondary">
-        <Modal.Header closeButton closeVariant="white" className="border-secondary">
-          <Modal.Title>Confirm Logout</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to logout?
-        </Modal.Body>
-        <Modal.Footer className="border-secondary">
-          <Button variant="secondary" onClick={() => setShowLogoutModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleConfirmLogout}>
-            Logout
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   );
 };
